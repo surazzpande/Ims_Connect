@@ -1,0 +1,78 @@
+/* src/styles/RewardCenter.css */
+.reward-center-container {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.idea-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.idea-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2) !important;
+}
+
+.idea-title {
+  font-weight: 600;
+  color: #333;
+}
+
+.idea-description {
+  flex-grow: 1;
+  margin-bottom: 1rem;
+}
+
+.vote-count {
+  font-weight: 700;
+  color: #1976d2;
+}
+
+.rank-1 {
+  background: linear-gradient(135deg, #ffd700 0%, #ffec8b 100%);
+}
+
+.rank-2 {
+  background: linear-gradient(135deg, #c0c0c0 0%, #e6e6e6 100%);
+}
+
+.rank-3 {
+  background: linear-gradient(135deg, #cd7f32 0%, #deb887 100%);
+}
+
+.rank-4, .rank-5 {
+  background: linear-gradient(135deg, #f0f0f0 0%, #ffffff 100%);
+}
+
+@media (max-width: 600px) {
+  .idea-card {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

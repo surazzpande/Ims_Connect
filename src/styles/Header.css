@@ -1,0 +1,41 @@
+/* src/styles/Header.css */
+.app-header {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1201 !important;
+}
+
+.header-title {
+  flex-grow: 1;
+}
+
+.main-content {
+  padding-top: 72px;
+  min-height: calc(100vh - 72px);
+  display: flex;
+}
+
+/* Layout fixes */
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Drawer positioning fix */
+.MuiDrawer-paper {
+  margin-top: 72px !important;
+  height: calc(100vh - 72px) !important;
+  position: fixed !important;
+  z-index: 1200;
+}
+
+/* Content area */
+.content-area {
+  margin-left: 280px;
+  width: calc(100% - 280px);
+  padding: 24px;
+  box-sizing: border-box;
+}

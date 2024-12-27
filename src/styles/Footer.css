@@ -1,0 +1,11 @@
+/* Footer styles */
+.footer-container {
+  padding: 10px;
+  text-align: center;
+  background-color: #1976d2;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  height: 40px;
+  z-index: 1200;
+}

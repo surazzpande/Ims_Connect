@@ -1,0 +1,61 @@
+/* src/styles/RegionalDashboard.css */
+.regional-dashboard-container {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dashboard-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.idea-tabs {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.top-ideas-card {
+  margin-bottom: 2rem;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.top-ideas-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2) !important;
+}
+
+.card-title {
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.MuiChip-root {
+  font-weight: 600;
+}
+
+.ideas-table {
+  transition: box-shadow 0.3s ease;
+}
+
+.ideas-table:hover {
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+@media (max-width: 600px) {
+  .MuiTableCell-root {
+    padding: 8px;
+  }
+  
+  .MuiSelect-select {
+    min-width: 150px;
+  }
+}

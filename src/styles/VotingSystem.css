@@ -1,0 +1,63 @@
+.voting-system-container {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page-title {
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+.voting-card {
+  margin-bottom: 2rem;
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+.voting-card:hover {
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.idea-tabs {
+  margin-bottom: 2rem;
+}
+
+.top-ideas {
+  margin-bottom: 2rem;
+}
+
+.idea-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.idea-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.ideas-table {
+  margin-top: 2rem;
+}
+
+.reward-center-button {
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.reward-center-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+@media (max-width: 600px) {
+  .page-title {
+    font-size: 2rem;
+  }
+}

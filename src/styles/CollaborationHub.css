@@ -1,0 +1,32 @@
+.collaboration-hub-container {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.page-title {
+  margin-bottom: 2rem;
+}
+
+.collaboration-card {
+  margin-bottom: 2rem;
+}
+
+.team-creation-card,
+.teams-display-card {
+  margin-bottom: 2rem;
+}
+
+.card-title {
+  margin-left: 1rem;
+}
+
+.member-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.teams-table {
+  margin-top: 1rem;
+}

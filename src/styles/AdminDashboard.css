@@ -1,0 +1,121 @@
+.admin-dashboard-container {
+  padding: 2rem;
+  width: 100%;
+  min-height: 100vh;
+  background: #f0f5ff;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: linear-gradient(120deg, #2196f3 0%, #1976d2 100%);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(33, 150, 243, 0.2);
+}
+
+.dashboard-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.section-container {
+  background: #ffffff;
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(149, 157, 165, 0.1);
+  margin-bottom: 2rem;
+  transition: all 0.3s ease;
+}
+
+.section-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1976d2;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid #e3f2fd;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.idea-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 1px solid #e3f2fd;
+}
+
+.idea-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+.top-1 {
+  background: linear-gradient(135deg, #fff9c4 0%, #ffd700 100%);
+  border: none;
+}
+
+.top-2 {
+  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+  border: none;
+}
+
+.top-3 {
+  background: linear-gradient(135deg, #ffe0b2 0%, #cd7f32 100%);
+  border: none;
+}
+
+.vote-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background: rgba(25, 118, 210, 0.1);
+  border-radius: 12px;
+  font-weight: 700;
+  color: #1976d2;
+  margin-top: 1.5rem;
+}
+
+.ideas-table {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.MuiTableCell-head {
+  background: #f8faff;
+  color: #1976d2;
+  font-weight: 700;
+  padding: 1.25rem;
+}
+
+.MuiChip-root {
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 768px) {
+  .admin-dashboard-container {
+    padding: 1rem;
+  }
+  
+  .dashboard-title {
+    font-size: 2rem;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+  }
+}

@@ -1,0 +1,37 @@
+/* src/App.css */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.header, .footer {
+  flex-shrink: 0;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+}
+
+.sidebar-container {
+  width: 280px;
+  height: 100vh; /* Full height of the viewport */
+  position: fixed;
+  overflow-y: auto;
+}
+
+.content-area {
+  flex: 1;
+  margin-left: 280px; /* Adjust this value based on your sidebar width */
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.auth-content {
+  margin-left: 0; /* No sidebar for login/signup */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 128px); /* Adjust this value based on header and footer height */
+}
