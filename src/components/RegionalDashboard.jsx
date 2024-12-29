@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import {
   Container, Typography, Grid, Card, CardContent, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, Paper, Tabs, Tab,
-  Box, Chip, Select, MenuItem, FormControl, InputLabel
+  Box, Chip, Select, MenuItem, FormControl, InputLabel, Avatar,
+  List, ListItem, ListItemText
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import PublicIcon from '@mui/icons-material/Public';
 import GroupIcon from '@mui/icons-material/Group';
 import PersonIcon from '@mui/icons-material/Person';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import '../styles/RegionalDashboard.css';
@@ -32,13 +34,26 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
+const regions = [
+  "All Regions", "Tokyo, Japan", "Berlin, Germany", "Toronto, Canada",
+  "Dubai, United Arab Emirates", "Sydney, Australia", "London, United Kingdom",
+  "San Francisco, USA", "Copenhagen, Denmark", "New York, USA", "Mumbai, India",
+  "Beijing, China", "Vancouver, Canada", "Singapore", "Amsterdam, Netherlands",
+  "São Paulo, Brazil", "Seoul, South Korea", "Stockholm, Sweden", "Paris, France",
+  "Nairobi, Kenya", "Milan, Italy", "Seattle, USA", "Montreal, Canada",
+  "Silicon Valley, USA", "Reykjavik, Iceland", "Cape Town, South Africa",
+  "Tel Aviv, Israel", "Santiago, Chile", "Zurich, Switzerland"
+];
+
 const RegionalDashboard = () => {
   const [ideas, setIdeas] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [tabValue, setTabValue] = useState(0);
-  const [selectedRegion, setSelectedRegion] = useState('Tokyo, Japan');
+  const [selectedRegion, setSelectedRegion] = useState('All Regions');
 
   useEffect(() => {
     fetchIdeas();
+    fetchTeams();
   }, [selectedRegion]);
 
   const fetchIdeas = async () => {
@@ -48,9 +63,22 @@ const RegionalDashboard = () => {
         id: doc.id,
         ...doc.data()
       }));
-      setIdeas(ideasData.filter(idea => idea.region === selectedRegion));
+      setIdeas(ideasData);
     } catch (error) {
       console.error("Error fetching ideas: ", error);
+    }
+  };
+
+  const fetchTeams = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "teams"));
+      const teamsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setTeams(teamsData);
+    } catch (error) {
+      console.error("Error fetching teams: ", error);
     }
   };
 
@@ -62,19 +90,24 @@ const RegionalDashboard = () => {
     setSelectedRegion(event.target.value);
   };
 
-  const filteredIdeas = ideas.filter(idea =>
-    tabValue === 0 || (tabValue === 1 && idea.type === 'individual') || (tabValue === 2 && idea.type === 'team')
+  const filteredIdeas = ideas.filter(idea => 
+    (selectedRegion === 'All Regions' || idea.region === selectedRegion) &&
+    (tabValue === 0 || (tabValue === 1 && idea.type === 'individual') || (tabValue === 2 && idea.type === 'team'))
+  ).sort((a, b) => b.votes - a.votes);
+
+  const filteredTeams = teams.filter(team => 
+    selectedRegion === 'All Regions' || team.regions.includes(selectedRegion)
   );
 
-  const topIdeas = [...filteredIdeas].sort((a, b) => b.votes - a.votes).slice(0, 3);
-  const remainingIdeas = [...filteredIdeas].sort((a, b) => b.votes - a.votes).slice(3);
+  const topIdeas = filteredIdeas.slice(0, 5);
+  const remainingIdeas = filteredIdeas.slice(5);
 
   return (
     <Container maxWidth="lg" className="regional-dashboard-container">
       <Box sx={{ textAlign: 'center', mb: 4 }}>
         <Typography variant="h4" gutterBottom color="primary" className="dashboard-title">
           <PublicIcon sx={{ fontSize: 40, verticalAlign: 'middle', mr: 1 }} />
-          Regional Dashboard
+          Regional Dashboard: {selectedRegion}
         </Typography>
         <FormControl variant="outlined" sx={{ minWidth: 200 }}>
           <InputLabel>Select Region</InputLabel>
@@ -83,34 +116,9 @@ const RegionalDashboard = () => {
             onChange={handleRegionChange}
             label="Select Region"
           >
-            <MenuItem value="Tokyo, Japan">Tokyo, Japan</MenuItem>
-            <MenuItem value="Berlin, Germany">Berlin, Germany</MenuItem>
-            <MenuItem value="Toronto, Canada">Toronto, Canada</MenuItem>
-            <MenuItem value="Dubai, United Arab Emirates">Dubai, United Arab Emirates</MenuItem>
-            <MenuItem value="Sydney, Australia">Sydney, Australia</MenuItem>
-            <MenuItem value="London, United Kingdom">London, United Kingdom</MenuItem>
-            <MenuItem value="San Francisco, USA">San Francisco, USA</MenuItem>
-            <MenuItem value="Copenhagen, Denmark">Copenhagen, Denmark</MenuItem>
-            <MenuItem value="New York, USA">New York, USA</MenuItem>
-            <MenuItem value="Mumbai, India">Mumbai, India</MenuItem>
-            <MenuItem value="Beijing, China">Beijing, China</MenuItem>
-            <MenuItem value="Vancouver, Canada">Vancouver, Canada</MenuItem>
-            <MenuItem value="Singapore">Singapore</MenuItem>
-            <MenuItem value="Amsterdam, Netherlands">Amsterdam, Netherlands</MenuItem>
-            <MenuItem value="São Paulo, Brazil">São Paulo, Brazil</MenuItem>
-            <MenuItem value="Seoul, South Korea">Seoul, South Korea</MenuItem>
-            <MenuItem value="Stockholm, Sweden">Stockholm, Sweden</MenuItem>
-            <MenuItem value="Paris, France">Paris, France</MenuItem>
-            <MenuItem value="Nairobi, Kenya">Nairobi, Kenya</MenuItem>
-            <MenuItem value="Milan, Italy">Milan, Italy</MenuItem>
-            <MenuItem value="Seattle, USA">Seattle, USA</MenuItem>
-            <MenuItem value="Montreal, Canada">Montreal, Canada</MenuItem>
-            <MenuItem value="Silicon Valley, USA">Silicon Valley, USA</MenuItem>
-            <MenuItem value="Reykjavik, Iceland">Reykjavik, Iceland</MenuItem>
-            <MenuItem value="Cape Town, South Africa">Cape Town, South Africa</MenuItem>
-            <MenuItem value="Tel Aviv, Israel">Tel Aviv, Israel</MenuItem>
-            <MenuItem value="Santiago, Chile">Santiago, Chile</MenuItem>
-            <MenuItem value="Zurich, Switzerland">Zurich, Switzerland</MenuItem>
+            {regions.map((region) => (
+              <MenuItem key={region} value={region}>{region}</MenuItem>
+            ))}
           </Select>
         </FormControl>
       </Box>
@@ -121,60 +129,102 @@ const RegionalDashboard = () => {
         <Tab icon={<GroupIcon />} label="Team Ideas" />
       </Tabs>
 
-      {/* Top Ideas Section */}
-      <Card className="top-ideas-card" elevation={3}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom className="card-title">Top Ideas</Typography>
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Typography variant="h6" gutterBottom className="section-title">
+            <LightbulbIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
+            Top Ideas
+          </Typography>
           <Grid container spacing={2}>
             {topIdeas.map(idea => (
-              <Grid item xs={12} sm={4} key={idea.id}>
-                <Paper elevation={2} sx={{ p: 2 }}>
-                  <Typography variant="subtitle1" gutterBottom>{idea.title}</Typography>
-                  <Typography variant="body2" color="text.secondary">{idea.description}</Typography>
-                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Chip
-                      label={idea.type}
-                      color={idea.type === 'individual' ? 'primary' : 'secondary'}
-                      size="small"
-                    />
-                    <Typography variant="body2">Votes: {idea.votes}</Typography>
-                  </Box>
-                </Paper>
+              <Grid item xs={12} sm={6} md={4} key={idea.id}>
+                <Card elevation={3}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>{idea.title}</Typography>
+                    <Typography variant="body2" color="text.secondary">{idea.description}</Typography>
+                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Chip
+                        icon={idea.type === 'individual' ? <PersonIcon /> : <GroupIcon />}
+                        label={idea.type}
+                        color={idea.type === 'individual' ? 'primary' : 'secondary'}
+                        size="small"
+                      />
+                      <Typography variant="body2">Votes: {idea.votes}</Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
               </Grid>
             ))}
           </Grid>
-        </CardContent>
-      </Card>
+        </Grid>
 
-      {/* Remaining Ideas Section */}
-      <TableContainer component={Paper} sx={{ mt: 3 }} elevation={3} className="ideas-table">
-        <Table>
-          <TableHead>
-            <TableRow>
-              <StyledTableCell>Title</StyledTableCell>
-              <StyledTableCell>Description</StyledTableCell>
-              <StyledTableCell>Type</StyledTableCell>
-              <StyledTableCell align="right">Votes</StyledTableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {remainingIdeas.map((idea) => (
-              <StyledTableRow key={idea.id}>
-                <StyledTableCell component="th" scope="row">{idea.title}</StyledTableCell>
-                <StyledTableCell>{idea.description}</StyledTableCell>
-                <StyledTableCell>
-                  <Chip
-                    label={idea.type}
-                    color={idea.type === 'individual' ? 'primary' : 'secondary'}
-                    size="small"
-                  />
-                </StyledTableCell>
-                <StyledTableCell align="right">{idea.votes}</StyledTableCell>
-              </StyledTableRow>
+        {remainingIdeas.length > 0 && (
+          <Grid item xs={12}>
+            <Typography variant="h6" gutterBottom className="section-title">
+              <PublicIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
+              All Ideas
+            </Typography>
+            <TableContainer component={Paper} elevation={3} className="ideas-table">
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <StyledTableCell>Title</StyledTableCell>
+                    <StyledTableCell>Description</StyledTableCell>
+                    <StyledTableCell>Type</StyledTableCell>
+                    <StyledTableCell align="right">Votes</StyledTableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {remainingIdeas.map((idea) => (
+                    <StyledTableRow key={idea.id}>
+                      <StyledTableCell component="th" scope="row">{idea.title}</StyledTableCell>
+                      <StyledTableCell>{idea.description}</StyledTableCell>
+                      <StyledTableCell>
+                        <Chip
+                          icon={idea.type === 'individual' ? <PersonIcon /> : <GroupIcon />}
+                          label={idea.type}
+                          color={idea.type === 'individual' ? 'primary' : 'secondary'}
+                          size="small"
+                        />
+                      </StyledTableCell>
+                      <StyledTableCell align="right">{idea.votes}</StyledTableCell>
+                    </StyledTableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Grid>
+        )}
+
+        <Grid item xs={12}>
+          <Typography variant="h6" gutterBottom className="section-title">
+            <GroupIcon sx={{ verticalAlign: 'middle', mr: 1 }} />
+            Teams in {selectedRegion}
+          </Typography>
+          <List>
+            {filteredTeams.map((team) => (
+              <ListItem key={team.id}>
+                <ListItemText
+                  primary={team.name}
+                  secondary={`${team.members.length} members`}
+                />
+                <Box>
+                  {team.members.slice(0, 3).map((member, index) => (
+                    <Avatar key={index} sx={{ width: 24, height: 24, fontSize: 12, mr: 0.5 }}>
+                      {member.name[0]}
+                    </Avatar>
+                  ))}
+                  {team.members.length > 3 && (
+                    <Avatar sx={{ width: 24, height: 24, fontSize: 12 }}>
+                      +{team.members.length - 3}
+                    </Avatar>
+                  )}
+                </Box>
+              </ListItem>
             ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          </List>
+        </Grid>
+      </Grid>
     </Container>
   );
 }

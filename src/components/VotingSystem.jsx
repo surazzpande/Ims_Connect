@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Button, Container, Typography, Table, TableBody, TableCell, 
-  TableContainer, TableHead, TableRow, Paper, Tabs, Tab, Box, 
-  Chip, ThemeProvider, createTheme, Card, CardContent, Grid, 
-  Snackbar, Alert 
-} from '@mui/material';
+import { Button, Container, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Tabs, Tab, Box, Chip, ThemeProvider, createTheme, Card, CardContent, Grid, Snackbar, Alert } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import HowToVoteIcon from '@mui/icons-material/HowToVote';
 import PublicIcon from '@mui/icons-material/Public';
 import GroupIcon from '@mui/icons-material/Group';
 import PersonIcon from '@mui/icons-material/Person';
-import { collection, getDocs, updateDoc, doc, arrayUnion, getDoc } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc, setDoc, runTransaction, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import '../styles/VotingSystem.css';
 
@@ -50,23 +45,43 @@ const VotingSystem = () => {
   const [tabValue, setTabValue] = useState(0);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [userVotes, setUserVotes] = useState({});
 
   useEffect(() => {
-    fetchIdeas();
+    const unsubscribe = onSnapshot(collection(db, "ideas"), (snapshot) => {
+      const updatedIdeas = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setIdeas(updatedIdeas);
+    });
+
+    const authUnsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        fetchUserVotes(user.uid);
+      } else {
+        setUserVotes({});
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      authUnsubscribe();
+    };
   }, []);
 
-  const fetchIdeas = async () => {
+  const fetchUserVotes = async (userId) => {
     try {
-      const querySnapshot = await getDocs(collection(db, "ideas"));
-      const ideasData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        hasVoted: false
-      }));
-      setIdeas(ideasData);
+      const userVotesRef = doc(db, "userVotes", userId);
+      const userVotesDoc = await getDocs(userVotesRef);
+      if (userVotesDoc.exists()) {
+        setUserVotes(userVotesDoc.data());
+      } else {
+        await setDoc(userVotesRef, {});
+        setUserVotes({});
+      }
     } catch (error) {
-      console.error("Error fetching ideas: ", error);
-      setError("Failed to fetch ideas. Please try again.");
+      console.error("Error fetching user votes: ", error);
     }
   };
 
@@ -76,27 +91,43 @@ const VotingSystem = () => {
       return;
     }
 
+    const userId = auth.currentUser.uid;
     const ideaRef = doc(db, "ideas", id);
-    const ideaDoc = await getDoc(ideaRef);
-    const ideaData = ideaDoc.data();
-
-    if (ideaData.votedUsers && ideaData.votedUsers.includes(auth.currentUser.uid)) {
-      setError('You have already voted for this idea.');
-      return;
-    }
+    const userVotesRef = doc(db, "userVotes", userId);
 
     try {
-      await updateDoc(ideaRef, {
-        votes: ideaData.votes + 1,
-        votedUsers: arrayUnion(auth.currentUser.uid)
+      await runTransaction(db, async (transaction) => {
+        const ideaDoc = await transaction.get(ideaRef);
+        const userVotesDoc = await transaction.get(userVotesRef);
+
+        if (!ideaDoc.exists()) {
+          throw new Error("Idea does not exist!");
+        }
+
+        const ideaData = ideaDoc.data();
+        const userVotesData = userVotesDoc.data() || {};
+
+        if (userVotesData[id]) {
+          throw new Error("You have already voted for this idea.");
+        }
+
+        const newVotes = (ideaData.votes || 0) + 1;
+        transaction.update(ideaRef, { 
+          votes: newVotes,
+          [`votedUsers.${userId}`]: true
+        });
+
+        transaction.set(userVotesRef, {
+          ...userVotesData,
+          [id]: true
+        }, { merge: true });
       });
-      setIdeas(ideas.map(idea => 
-        idea.id === id ? { ...idea, votes: idea.votes + 1, hasVoted: true } : idea
-      ));
+
+      setUserVotes({ ...userVotes, [id]: true });
       setSuccess('Vote submitted successfully!');
     } catch (error) {
       console.error("Error updating vote: ", error);
-      setError('Failed to submit vote. Please try again.');
+      setError(`Failed to submit vote: ${error.message}`);
     }
   };
 
@@ -120,7 +151,6 @@ const VotingSystem = () => {
           <HowToVoteIcon sx={{ fontSize: 40, verticalAlign: 'middle', mr: 1 }} />
           Idea Voting System
         </Typography>
-
         <Card elevation={3} className="voting-card">
           <CardContent>
             <Tabs value={tabValue} onChange={handleTabChange} centered className="idea-tabs">
@@ -128,7 +158,6 @@ const VotingSystem = () => {
               <Tab icon={<PersonIcon />} label="Individual Ideas" />
               <Tab icon={<GroupIcon />} label="Team Ideas" />
             </Tabs>
-
             <Grid container spacing={3} className="top-ideas">
               {topIdeas.map((idea) => (
                 <Grid item xs={12} sm={4} key={idea.id}>
@@ -139,27 +168,17 @@ const VotingSystem = () => {
                         {idea.description}
                       </Typography>
                       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Chip 
-                          icon={idea.type === 'individual' ? <PersonIcon /> : <GroupIcon />}
-                          label={idea.type}
-                          color={idea.type === 'individual' ? 'primary' : 'secondary'}
-                          size="small"
-                        />
-                        <Chip 
-                          icon={<PublicIcon />}
-                          label={idea.region}
-                          variant="outlined"
-                          size="small"
-                        />
+                        <Chip icon={idea.type === 'individual' ? <PersonIcon /> : <GroupIcon />} label={idea.type} color={idea.type === 'individual' ? 'primary' : 'secondary'} size="small" />
+                        <Chip icon={<PublicIcon />} label={idea.region} variant="outlined" size="small" />
                       </Box>
                       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Typography variant="body2">Votes: {idea.votes}</Typography>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={() => handleVote(idea.id)}
-                          disabled={!auth.currentUser || idea.hasVoted}
-                          startIcon={<HowToVoteIcon />}
+                        <Button 
+                          variant="contained" 
+                          color="primary" 
+                          onClick={() => handleVote(idea.id)} 
+                          disabled={!auth.currentUser || userVotes[idea.id]} 
+                          startIcon={<HowToVoteIcon />} 
                           size="small"
                         >
                           Vote
@@ -170,7 +189,6 @@ const VotingSystem = () => {
                 </Grid>
               ))}
             </Grid>
-
             <TableContainer component={Paper} elevation={3} className="ideas-table">
               <Table>
                 <TableHead>
@@ -189,22 +207,17 @@ const VotingSystem = () => {
                       <StyledTableCell component="th" scope="row">{idea.title}</StyledTableCell>
                       <StyledTableCell>{idea.description}</StyledTableCell>
                       <StyledTableCell>
-                        <Chip 
-                          icon={idea.type === 'individual' ? <PersonIcon /> : <GroupIcon />}
-                          label={idea.type}
-                          color={idea.type === 'individual' ? 'primary' : 'secondary'}
-                          size="small"
-                        />
+                        <Chip icon={idea.type === 'individual' ? <PersonIcon /> : <GroupIcon />} label={idea.type} color={idea.type === 'individual' ? 'primary' : 'secondary'} size="small" />
                       </StyledTableCell>
                       <StyledTableCell>{idea.region}</StyledTableCell>
                       <StyledTableCell align="center">{idea.votes}</StyledTableCell>
                       <StyledTableCell align="center">
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={() => handleVote(idea.id)}
-                          disabled={!auth.currentUser || idea.hasVoted}
-                          startIcon={<HowToVoteIcon />}
+                        <Button 
+                          variant="contained" 
+                          color="primary" 
+                          onClick={() => handleVote(idea.id)} 
+                          disabled={!auth.currentUser || userVotes[idea.id]} 
+                          startIcon={<HowToVoteIcon />} 
                           size="small"
                         >
                           Vote
@@ -217,7 +230,6 @@ const VotingSystem = () => {
             </TableContainer>
           </CardContent>
         </Card>
-
         <Snackbar open={!!error} autoHideDuration={6000} onClose={() => setError('')}>
           <Alert onClose={() => setError('')} severity="error" sx={{ width: '100%' }}>
             {error}

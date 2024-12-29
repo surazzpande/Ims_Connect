@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Button, Container, Typography, Grid, Card, CardContent, TextField, Select, MenuItem,
-  FormControl, InputLabel, Box, Paper, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Chip, List, ListItem, ListItemText, Avatar, ThemeProvider,
-  createTheme, Snackbar, Alert
-} from '@mui/material';
+import { Button, Container, Typography, Grid, Card, CardContent, TextField, Select, MenuItem, FormControl, InputLabel, Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Chip, List, ListItem, ListItemText, Avatar, ThemeProvider, createTheme, Snackbar, Alert } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Group, PersonAdd, Delete } from '@mui/icons-material';
 import { collection, addDoc, getDocs, serverTimestamp } from 'firebase/firestore';
@@ -44,7 +39,7 @@ const theme = createTheme({
 
 const CollaborationHub = () => {
   const [teams, setTeams] = useState([]);
-  const [newTeam, setNewTeam] = useState({ name: '', region: '', members: [] });
+  const [newTeam, setNewTeam] = useState({ name: '', regions: [], members: [] });
   const [newMember, setNewMember] = useState({ name: '', region: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -65,19 +60,19 @@ const CollaborationHub = () => {
   };
 
   const handleCreateTeam = async () => {
-    if (newTeam.name && newTeam.region && newTeam.members.length > 0) {
+    if (newTeam.name && newTeam.regions.length > 0 && newTeam.members.length > 0) {
       try {
         const teamData = { ...newTeam, createdAt: serverTimestamp(), createdBy: auth.currentUser.uid };
         await addDoc(collection(db, "teams"), teamData);
         fetchTeams();
-        setNewTeam({ name: '', region: '', members: [] });
+        setNewTeam({ name: '', regions: [], members: [] });
         setSuccess('Team created successfully!');
       } catch (error) {
         console.error("Error creating team: ", error);
         setError("Failed to create team. Please try again.");
       }
     } else {
-      setError("Please fill all fields and add at least one member.");
+      setError("Please fill all fields, select at least one region, and add at least one member.");
     }
   };
 
@@ -128,14 +123,24 @@ const CollaborationHub = () => {
                       margin="normal"
                     />
                     <FormControl fullWidth variant="outlined" margin="normal">
-                      <InputLabel>Team Region</InputLabel>
+                      <InputLabel>Team Regions</InputLabel>
                       <Select
-                        value={newTeam.region}
-                        onChange={(e) => setNewTeam({ ...newTeam, region: e.target.value })}
-                        label="Team Region"
+                        multiple
+                        value={newTeam.regions}
+                        onChange={(e) => setNewTeam({ ...newTeam, regions: e.target.value })}
+                        label="Team Regions"
+                        renderValue={(selected) => (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {selected.map((value) => (
+                              <Chip key={value} label={value} />
+                            ))}
+                          </Box>
+                        )}
                       >
                         {regions.map((region) => (
-                          <MenuItem key={region} value={region}>{region}</MenuItem>
+                          <MenuItem key={region} value={region}>
+                            {region}
+                          </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
@@ -189,7 +194,7 @@ const CollaborationHub = () => {
                       color="primary"
                       onClick={handleCreateTeam}
                       fullWidth
-                      disabled={!newTeam.name || !newTeam.region || newTeam.members.length === 0}
+                      disabled={!newTeam.name || newTeam.regions.length === 0 || newTeam.members.length === 0}
                       sx={{ mt: 2 }}
                     >
                       Create Team
@@ -207,7 +212,7 @@ const CollaborationHub = () => {
                           <TableHead>
                             <TableRow>
                               <StyledTableCell>Team Name</StyledTableCell>
-                              <StyledTableCell>Team Region</StyledTableCell>
+                              <StyledTableCell>Team Regions</StyledTableCell>
                               <StyledTableCell>Number of Members</StyledTableCell>
                               <StyledTableCell>Members</StyledTableCell>
                             </TableRow>
@@ -216,7 +221,11 @@ const CollaborationHub = () => {
                             {teams.map((team) => (
                               <StyledTableRow key={team.id}>
                                 <StyledTableCell>{team.name}</StyledTableCell>
-                                <StyledTableCell>{team.region}</StyledTableCell>
+                                <StyledTableCell>
+                                  {team.regions.map((region, idx) => (
+                                    <Chip key={idx} label={region} sx={{ m: 0.5 }} />
+                                  ))}
+                                </StyledTableCell>
                                 <StyledTableCell>{team.members.length}</StyledTableCell>
                                 <StyledTableCell>
                                   {team.members.map((member, idx) => (

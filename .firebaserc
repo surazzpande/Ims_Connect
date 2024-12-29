@@ -1,5 +1,7 @@
 {
   "projects": {
     "default": "firbase-ims-connect"
-  }
+  },
+  "targets": {},
+  "etags": {}
 }

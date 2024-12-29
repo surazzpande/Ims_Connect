@@ -13,6 +13,37 @@ import { collection, addDoc, getDocs, serverTimestamp } from 'firebase/firestore
 import { db, auth } from '../config/firebase';
 import '../styles/IdeaSubmission.css';
 
+const regions = [
+  "Tokyo, Japan",
+  "Berlin, Germany",
+  "Toronto, Canada",
+  "Dubai, United Arab Emirates",
+  "Sydney, Australia",
+  "London, United Kingdom",
+  "San Francisco, USA",
+  "Copenhagen, Denmark",
+  "New York, USA",
+  "Mumbai, India",
+  "Beijing, China",
+  "Vancouver, Canada",
+  "Singapore",
+  "Amsterdam, Netherlands",
+  "São Paulo, Brazil",
+  "Seoul, South Korea",
+  "Stockholm, Sweden",
+  "Paris, France",
+  "Nairobi, Kenya",
+  "Milan, Italy",
+  "Seattle, USA",
+  "Montreal, Canada",
+  "Silicon Valley, USA",
+  "Reykjavik, Iceland",
+  "Cape Town, South Africa",
+  "Tel Aviv, Israel",
+  "Santiago, Chile",
+  "Zurich, Switzerland"
+];
+
 const IdeaSubmission = () => {
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
@@ -20,6 +51,7 @@ const IdeaSubmission = () => {
   const [type, setType] = useState('individual');
   const [region, setRegion] = useState('');
   const [selectedTeam, setSelectedTeam] = useState(null);
+  const [memberName, setMemberName] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [teams, setTeams] = useState([]);
@@ -47,16 +79,17 @@ const IdeaSubmission = () => {
     if (!auth.currentUser) {
       setError('You must be logged in to submit an idea.');
       navigate('/login');
-    } else if (!region) {
-      setError('Please select a region.');
+    } else if (type === 'individual' && !region) {
+      setError('Please select a region for individual submission.');
     } else {
       try {
         const newIdea = {
           title,
           description,
           type,
-          region,
+          region: type === 'individual' ? region : null,
           team: selectedTeam ? selectedTeam.name : null,
+          memberName: type === 'individual' ? memberName : null,
           votes: 0,
           timestamp: serverTimestamp(),
           userId: auth.currentUser.uid,
@@ -72,6 +105,7 @@ const IdeaSubmission = () => {
         setType('individual');
         setRegion('');
         setSelectedTeam(null);
+        setMemberName('');
         setError('');
         
         // Show success message
@@ -111,43 +145,52 @@ const IdeaSubmission = () => {
             onChange={(e) => setDescription(e.target.value)}
             required
           />
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-            <FormControl variant="outlined" sx={{ minWidth: '48%' }}>
-              <InputLabel>Type</InputLabel>
-              <Select
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                label="Type"
+          <FormControl variant="outlined" fullWidth margin="normal">
+            <InputLabel>Type</InputLabel>
+            <Select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              label="Type"
+              required
+            >
+              <MenuItem value="individual">Individual</MenuItem>
+              <MenuItem value="team">Team</MenuItem>
+            </Select>
+          </FormControl>
+
+          {type === 'individual' && (
+            <>
+              <TextField 
+                label="Member Name" 
+                variant="outlined" 
+                fullWidth 
+                margin="normal" 
+                value={memberName}
+                onChange={(e) => setMemberName(e.target.value)}
                 required
-              >
-                <MenuItem value="individual">Individual</MenuItem>
-                <MenuItem value="team">Team</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl variant="outlined" sx={{ minWidth: '48%' }}>
-              <InputLabel>Region</InputLabel>
-              <Select
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                label="Region"
-                required
-              >
-                <MenuItem value="North America">North America</MenuItem>
-                <MenuItem value="Europe">Europe</MenuItem>
-                <MenuItem value="Asia">Asia</MenuItem>
-                <MenuItem value="South America">South America</MenuItem>
-                <MenuItem value="Africa">Africa</MenuItem>
-                <MenuItem value="Oceania">Oceania</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
+              />
+              <FormControl variant="outlined" fullWidth margin="normal">
+                <InputLabel>Region</InputLabel>
+                <Select
+                  value={region}
+                  onChange={(e) => setRegion(e.target.value)}
+                  label="Region"
+                  required
+                >
+                  {regions.map((region) => (
+                    <MenuItem key={region} value={region}>{region}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </>
+          )}
 
           {type === 'team' && (
             <Autocomplete
               options={teams}
               getOptionLabel={(option) => option.name}
               renderInput={(params) => (
-                <TextField {...params} label="Select Team" variant="outlined" />
+                <TextField {...params} label="Select Team" variant="outlined" margin="normal" />
               )}
               value={selectedTeam}
               onChange={(event, newValue) => {
@@ -161,7 +204,6 @@ const IdeaSubmission = () => {
                   </Typography>
                 </Box>
               )}
-              sx={{ mt: 2 }}
             />
           )}
 
@@ -176,7 +218,7 @@ const IdeaSubmission = () => {
             label={type} 
             color={type === 'individual' ? 'primary' : 'secondary'} 
           />
-          {region && (
+          {type === 'individual' && region && (
             <Chip 
               icon={<PublicIcon />}
               label={region} 
