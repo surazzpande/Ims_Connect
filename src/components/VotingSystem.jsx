@@ -5,7 +5,7 @@ import HowToVoteIcon from '@mui/icons-material/HowToVote';
 import PublicIcon from '@mui/icons-material/Public';
 import GroupIcon from '@mui/icons-material/Group';
 import PersonIcon from '@mui/icons-material/Person';
-import { collection, getDocs, updateDoc, doc, setDoc, runTransaction, onSnapshot } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc, getDoc, setDoc, increment, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import '../styles/VotingSystem.css';
 
@@ -49,10 +49,7 @@ const VotingSystem = () => {
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "ideas"), (snapshot) => {
-      const updatedIdeas = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const updatedIdeas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setIdeas(updatedIdeas);
     });
 
@@ -73,7 +70,7 @@ const VotingSystem = () => {
   const fetchUserVotes = async (userId) => {
     try {
       const userVotesRef = doc(db, "userVotes", userId);
-      const userVotesDoc = await getDocs(userVotesRef);
+      const userVotesDoc = await getDoc(userVotesRef);
       if (userVotesDoc.exists()) {
         setUserVotes(userVotesDoc.data());
       } else {
@@ -96,32 +93,19 @@ const VotingSystem = () => {
     const userVotesRef = doc(db, "userVotes", userId);
 
     try {
-      await runTransaction(db, async (transaction) => {
-        const ideaDoc = await transaction.get(ideaRef);
-        const userVotesDoc = await transaction.get(userVotesRef);
+      const userVotesDoc = await getDoc(userVotesRef);
+      const userVotesData = userVotesDoc.data() || {};
 
-        if (!ideaDoc.exists()) {
-          throw new Error("Idea does not exist!");
-        }
+      if (userVotesData[id]) {
+        setError("You have already voted for this idea.");
+        return;
+      }
 
-        const ideaData = ideaDoc.data();
-        const userVotesData = userVotesDoc.data() || {};
-
-        if (userVotesData[id]) {
-          throw new Error("You have already voted for this idea.");
-        }
-
-        const newVotes = (ideaData.votes || 0) + 1;
-        transaction.update(ideaRef, { 
-          votes: newVotes,
-          [`votedUsers.${userId}`]: true
-        });
-
-        transaction.set(userVotesRef, {
-          ...userVotesData,
-          [id]: true
-        }, { merge: true });
+      await updateDoc(ideaRef, {
+        votes: increment(1)
       });
+
+      await setDoc(userVotesRef, { ...userVotesData, [id]: true }, { merge: true });
 
       setUserVotes({ ...userVotes, [id]: true });
       setSuccess('Vote submitted successfully!');
@@ -168,7 +152,12 @@ const VotingSystem = () => {
                         {idea.description}
                       </Typography>
                       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Chip icon={idea.type === 'individual' ? <PersonIcon /> : <GroupIcon />} label={idea.type} color={idea.type === 'individual' ? 'primary' : 'secondary'} size="small" />
+                        <Chip 
+                          icon={idea.type === 'individual' ? <PersonIcon /> : <GroupIcon />} 
+                          label={idea.type} 
+                          color={idea.type === 'individual' ? 'primary' : 'secondary'} 
+                          size="small" 
+                        />
                         <Chip icon={<PublicIcon />} label={idea.region} variant="outlined" size="small" />
                       </Box>
                       <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -207,7 +196,12 @@ const VotingSystem = () => {
                       <StyledTableCell component="th" scope="row">{idea.title}</StyledTableCell>
                       <StyledTableCell>{idea.description}</StyledTableCell>
                       <StyledTableCell>
-                        <Chip icon={idea.type === 'individual' ? <PersonIcon /> : <GroupIcon />} label={idea.type} color={idea.type === 'individual' ? 'primary' : 'secondary'} size="small" />
+                        <Chip 
+                          icon={idea.type === 'individual' ? <PersonIcon /> : <GroupIcon />} 
+                          label={idea.type} 
+                          color={idea.type === 'individual' ? 'primary' : 'secondary'} 
+                          size="small" 
+                        />
                       </StyledTableCell>
                       <StyledTableCell>{idea.region}</StyledTableCell>
                       <StyledTableCell align="center">{idea.votes}</StyledTableCell>
