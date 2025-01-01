@@ -1,21 +1,11 @@
+// src/components/Signup.jsx
 import React, { useState } from 'react';
-import { Button, TextField, Container, Typography, Paper, Avatar, Grid, ThemeProvider, createTheme } from '@mui/material';
+import { Button, TextField, Container, Typography, Paper, Avatar, Grid } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import '../styles/Signup.css';
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-});
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -66,58 +56,56 @@ const Signup = () => {
   };
 
   return (
-    <ThemeProvider theme={theme}>
-      <Container component="main" maxWidth="sm" className="signup-container">
-        <Paper elevation={3} className="signup-paper">
-          <Avatar className="signup-avatar">
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5" className="signup-title">
-            Sign Up
-          </Typography>
-          <form onSubmit={handleSubmit} className="signup-form">
-            <Grid container spacing={2}>
-              {['name', 'surname', 'email', 'phone', 'password', 'confirmPassword'].map((field) => (
-                <Grid item xs={12} sm={field === 'name' || field === 'surname' ? 6 : 12} key={field}>
-                  <TextField
-                    variant="outlined"
-                    required
-                    fullWidth
-                    id={field}
-                    label={field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1')}
-                    name={field}
-                    type={field.includes('password') ? 'password' : 'text'}
-                    autoComplete={field}
-                    value={formData[field]}
-                    onChange={handleChange}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-            {error && <Typography color="error" variant="body2" className="error-message">{error}</Typography>}
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              color="primary"
-              className="submit-button"
-              sx={{ mt: 3, mb: 2 }}
-            >
-              Sign Up
-            </Button>
-          </form>
+    <Container component="main" maxWidth="sm" className="signup-container">
+      <Paper elevation={3} className="signup-paper">
+        <Avatar className="signup-avatar">
+          <LockOutlinedIcon />
+        </Avatar>
+        <Typography component="h1" variant="h5">
+          Sign Up
+        </Typography>
+        <form onSubmit={handleSubmit} className="signup-form">
+          <Grid container spacing={2}>
+            {['name', 'surname', 'email', 'phone', 'password', 'confirmPassword'].map((field) => (
+              <Grid item xs={12} sm={field === 'name' || field === 'surname' ? 6 : 12} key={field}>
+                <TextField
+                  variant="outlined"
+                  required
+                  fullWidth
+                  id={field}
+                  label={field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1')}
+                  name={field}
+                  type={field.includes('password') ? 'password' : 'text'}
+                  autoComplete={field}
+                  value={formData[field]}
+                  onChange={handleChange}
+                />
+              </Grid>
+            ))}
+          </Grid>
+          {error && <Typography color="error" variant="body2" className="error-message">{error}</Typography>}
           <Button
+            type="submit"
             fullWidth
-            variant="text"
+            variant="contained"
             color="primary"
-            onClick={() => navigate('/login')}
-            className="login-link"
+            className="submit-button"
+            sx={{ mt: 3, mb: 2 }}
           >
-            Already have an account? Sign in
+            Sign Up
           </Button>
-        </Paper>
-      </Container>
-    </ThemeProvider>
+        </form>
+        <Button
+          fullWidth
+          variant="text"
+          color="primary"
+          onClick={() => navigate('/login')}
+          className="login-link"
+        >
+          Already have an account? Sign in
+        </Button>
+      </Paper>
+    </Container>
   );
 }
 
